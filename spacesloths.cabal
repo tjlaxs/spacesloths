@@ -1,0 +1,21 @@
+name:                spacesloths
+version:             0.1.0.0
+-- synopsis:
+-- description:
+homepage:            https://github.com/tjlaxs/spacesloths#readme
+author:              Tero Laxström
+maintainer:          tlax@neonpeons.com
+copyright:           2020 Tero Laxström
+category:            Web
+build-type:          Simple
+cabal-version:       >=1.10
+extra-source-files:  README.md
+
+executable spacesloths
+  hs-source-dirs:      src
+  main-is:             Main.hs
+  default-language:    Haskell2010
+  default-extensions:  NoImplicitPrelude
+                     , OverloadedStrings
+  build-depends:       base >= 4.7 && < 5
+                     , foundation
