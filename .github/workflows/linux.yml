@@ -20,8 +20,6 @@ jobs:
     - name: Check out
       uses: actions/checkout@v2
 
-    # things to be cached/restored:
-
     - name: Cache stack global package db
       id:   stack-global
       uses: actions/cache@v2
@@ -50,7 +48,6 @@ jobs:
       run: |
         mkdir -p ~/.local/bin
         export PATH=~/.local/bin:$PATH
-        # curl -sL https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'; chmod a+x ~/.local/bin/stack
         if [[ ! -x ~/.local/bin/stack ]]; then curl -sL https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'; chmod a+x ~/.local/bin/stack; fi
         stack --version
     - name: Install GHC
@@ -71,15 +68,6 @@ jobs:
         stack: ${{ matrix.stack }}
       run: |
         $stack install --test --bench --force-dirty --ghc-options=-fforce-recomp --ghc-options=-Werror --ghc-options=-split-sections --no-terminal
-        # -split-sections shrinks binaries by 30% on average here
-        # --pedantic --no-run-benchmarks
-#    - name: Test haddock generation
-#      env:
-#        stack: ${{ matrix.stack }}
-#      run: |
-#        time $stack build --haddock --no-haddock-deps --no-haddock-hyperlink-source --haddock-arguments="--no-print-missing-docs"
-#        # --no-haddock-hyperlink-source is 25% faster
-#        # --no-print-missing-docs is 600% quieter
 
     - name: Gather executables
       run: |
@@ -94,8 +82,82 @@ jobs:
         name: spacesloths-${{ github.sha }}-ubuntu
         path: tmp/spacesloths
 
+  build-windows:
+    runs-on: windows-latest
+    steps:
+
+    - name: Check out
+      uses: actions/checkout@v2
+
+    # things to be cached/restored:
+
+    - name: Cache stack global package db
+      id:   stack-global-package-db
+      uses: actions/cache@v2
+      with:
+        path: C:\Users\runneradmin\AppData\Roaming\stack\
+        key: ${{ runner.os }}-appdata-roaming-stack-${{ hashFiles('**.yaml') }}
+        restore-keys: |
+             ${{ runner.os }}-appdata-roaming-stack
+    - name: Cache stack programs dir   # ghc, ghc-included packages and their haddocks, mingw, msys2
+      id:   stack-programs-dir
+      uses: actions/cache@v2
+      with:
+        path: C:\Users\runneradmin\AppData\Local\Programs\stack\
+        key: ${{ runner.os }}-appdata-local-programs-stack-${{ hashFiles('**.yaml') }}
+        restore-keys: |
+             ${{ runner.os }}-appdata-local-programs-stack
+    - name: Cache .stack-work
+      uses: actions/cache@v2
+      with:
+        path: .stack-work
+        key: ${{ runner.os }}-stack-work-${{ hashFiles('**.yaml') }}
+        restore-keys: |
+             ${{ runner.os }}-stack-work
+    - name: Cache spacesloths/.stack-work
+      uses: actions/cache@v2
+      with:
+        path: spacesloths/.stack-work
+        key: ${{ runner.os }}-spacesloths-stack-work-${{ hashFiles('spacesloths/package.yaml') }}
+        restore-keys: |
+             ${{ runner.os }}-spacesloths-stack-work
+
+    - name: Install stack
+      run: |
+        curl -sL https://get.haskellstack.org/stable/windows-x86_64.zip -o stack.zip
+        7z x stack.zip stack.exe
+        which stack
+        stack --version
+        which ./stack
+        ./stack --version
+
+    - name: Install GHC
+      run: |
+        ./stack --no-terminal setup --install-ghc
+
+    - name: Install haskell deps
+      run: |
+        ./stack --no-terminal build --only-dependencies
+    - name: Build all spacesloths modules warning free, optimised and minimised
+      run: |
+        ./stack --no-terminal install --force-dirty --ghc-options=-fforce-recomp --ghc-options=-Werror
+
+    - name: Gather executables
+      run: |
+        mkdir tmp
+        cd tmp
+        mkdir spacesloths
+        cd spacesloths
+        copy C:\Users\runneradmin\AppData\Roaming\local\bin\spacesloths.exe .
+             
+    - name: Create executables artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: spacesloths-${{ github.sha }}-windows
+        path: tmp/spacesloths
+
   create-release:
-    needs: [build-ubuntu]
+    needs: [build-ubuntu, build-windows]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -109,12 +171,37 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: spacesloths-${{ github.sha }}-ubuntu
-        release_name: Release spacesloths-${{ github.sha }}-ubuntu
+        tag_name: spacesloths-${{ github.sha }}
+        release_name: Release spacesloths-${{ github.sha }}
         body: |
           Automatic realease from actions.
         draft: false
         prerelease: false
+
+  release-windows:
+    needs: create-release
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+    - name: Download ubuntu artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: spacesloths-${{ github.sha }}-ubuntu
+        path: ./tmp/
+    - name: Create tar file
+      run: cd tmp && tar -czvf spacesloths.tgz spacesloths
+    - name: Upload Release Asset
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: ./tmp/spacesloths.tgz
+        asset_name: spacesloths-windows-x64.tgz
+        asset_content_type: application/tar+gzip
 
   release-ubuntu:
     needs: create-release
