@@ -100,7 +100,7 @@ jobs:
     strategy:
       fail-fast: false
     outputs:
-      update_url: ${{ steps.create_release.update_url }}
+      upload_url: ${{ steps.create_release.upload_url }}
 
     steps:
     - name: Create Release
