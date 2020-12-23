@@ -138,6 +138,6 @@ jobs:
       with:
         upload_url: ${{ needs.create-release.outputs.upload_url }}
         asset_path: ./tmp/spacesloths.tgz
-        asset_name: spacesloths.tgz
+        asset_name: spacesloths-ubuntu-x64.tgz
         asset_content_type: application/tar+gzip
 
