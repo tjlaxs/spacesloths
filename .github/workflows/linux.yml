@@ -133,14 +133,14 @@ jobs:
 
     - name: Install GHC
       run: |
-        ./stack --no-terminal setup --install-ghc
+        ./stack --stack-yaml=stack-lts-16.26-windows.yaml --no-terminal setup --install-ghc
 
     - name: Install haskell deps
       run: |
-        ./stack --no-terminal build --only-dependencies
+        ./stack --stack-yaml=stack-lts-16.26-windows.yaml --no-terminal build --only-dependencies
     - name: Build all spacesloths modules warning free, optimised and minimised
       run: |
-        ./stack --no-terminal install --force-dirty --ghc-options=-fforce-recomp --ghc-options=-Werror
+        ./stack --stack-yaml=stack-lts-16.26-windows.yaml --no-terminal install --force-dirty --ghc-options=-fforce-recomp --ghc-options=-Werror
 
     - name: Gather executables
       run: |
