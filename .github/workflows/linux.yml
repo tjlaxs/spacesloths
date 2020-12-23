@@ -12,8 +12,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ghc: ['8.6.5']
-        stack: ['stack --resolver=ghc-8.6.5']
+        ghc : ['8.8.4']
+        stack: ['stack --stack-yaml=stack-lts-16.26-nonix.yaml']
 
     steps:
 
