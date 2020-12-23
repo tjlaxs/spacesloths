@@ -188,7 +188,7 @@ jobs:
     - name: Download ubuntu artifact
       uses: actions/download-artifact@v2
       with:
-        name: spacesloths-${{ github.sha }}-ubuntu
+        name: spacesloths-${{ github.sha }}-windows
         path: ./tmp/
     - name: Create tar file
       run: cd tmp && tar -czvf spacesloths.tgz spacesloths
