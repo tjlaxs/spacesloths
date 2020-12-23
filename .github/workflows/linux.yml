@@ -1,0 +1,97 @@
+
+name: linux CI
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ghc: ['8.6.5']
+        stack: ['stack --resovler=ghc-8.6.5']
+
+    steps:
+
+    - name: Check out
+      uses: actions/checkout@v2
+
+    # things to be cached/restored:
+
+    - name: Cache stack global package db
+      id:   stack-global
+      uses: actions/cache@v2
+      with:
+        path: ~/.stack
+        key: ${{ runner.os }}-stack-global-${{ matrix.ghc }}-${{ hashFiles('**.yaml') }}
+        restore-keys: |
+             ${{ runner.os }}-stack-global-${{ matrix.ghc }}
+    - name: Cache stack-installed programs in ~/.local/bin
+      id:   stack-programs
+      uses: actions/cache@v2
+      with:
+        path: ~/.local/bin
+        key: ${{ runner.os }}-stack-programs-${{ matrix.ghc }}-${{ hashFiles('**.yaml') }}
+        restore-keys: |
+             ${{ runner.os }}-stack-programs-${{ matrix.ghc }}
+    - name: Cache .stack-work
+      uses: actions/cache@v2
+      with:
+        path: .stack-work
+        key: ${{ runner.os }}-stack-work-${{ matrix.ghc }}-${{ hashFiles('**.yaml') }}
+        restore-keys: |
+             ${{ runner.os }}-stack-work-${{ matrix.ghc }}
+
+    - name: Install stack
+      run: |
+        mkdir -p ~/.local/bin
+        export PATH=~/.local/bin:$PATH
+        # curl -sL https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'; chmod a+x ~/.local/bin/stack
+        if [[ ! -x ~/.local/bin/stack ]]; then curl -sL https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'; chmod a+x ~/.local/bin/stack; fi
+        stack --version
+    - name: Install GHC
+      env:
+        stack: ${{matrix.stack}}
+      run: |
+        df -h
+        $stack setup --install-ghc
+        df -h
+    - name: Install haskell deps
+      env:
+        stack: ${{ matrix.stack }}
+      run: |
+        $stack build --test --bench --only-dependencies
+        #  --no-terminal
+    - name: Build all modules warning free, optimised and minimised, run unit/doc/bench tests
+      env:
+        stack: ${{ matrix.stack }}
+      run: |
+        $stack install --test --bench --force-dirty --ghc-options=-fforce-recomp --ghc-options=-Werror --ghc-options=-split-sections --no-terminal
+        # -split-sections shrinks binaries by 30% on average here
+        # --pedantic --no-run-benchmarks
+#    - name: Test haddock generation
+#      env:
+#        stack: ${{ matrix.stack }}
+#      run: |
+#        time $stack build --haddock --no-haddock-deps --no-haddock-hyperlink-source --haddock-arguments="--no-print-missing-docs"
+#        # --no-haddock-hyperlink-source is 25% faster
+#        # --no-print-missing-docs is 600% quieter
+
+    - name: Gather executables
+      run: |
+        mkdir tmp
+        cd tmp
+        mkdir spacesloths
+        cd spacesloths
+        cp ~/.local/bin/spacesloths .
+    # XXX intermittent upload failures
+    - name: Upload executables artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: spacesloths-ubuntu
+        path: tmp/spacesloths
