@@ -99,6 +99,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+    outputs:
+      update_url: ${{ steps.create_release.update_url }}
 
     steps:
     - name: Create Release
