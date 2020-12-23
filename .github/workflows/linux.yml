@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  linux-build:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -96,6 +96,7 @@ jobs:
         path: tmp/spacesloths
     - name: Create Release
       id: create_release
+      if: github.ref != 'refs/heads/master'
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
