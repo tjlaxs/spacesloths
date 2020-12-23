@@ -126,7 +126,6 @@ jobs:
       with:
         name: spacesloths-${{ github.sha }}-ubuntu
         path: ./tmp/
-    - name: 
     - name: Create tar file
       run: cd tmp && tar -czvf spacesloths.tgz spacesloths
     - name: Upload Release Asset
