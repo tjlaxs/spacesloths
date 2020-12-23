@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  linux-build:
+  build-ubuntu:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -91,10 +91,16 @@ jobs:
     - name: Upload executables artifact
       uses: actions/upload-artifact@v2
       with:
-        name: spacesloths-ubuntu
+        name: spacesloths-${{ github.sha }}-ubuntu
         path: tmp/spacesloths
-    - name: Create tar file
-      run: cd tmp && tar -czvf spacesloths.tgz spacesloths
+
+  create-release:
+    needs: [build-ubuntu]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    steps:
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -107,13 +113,29 @@ jobs:
           Automatic realease from actions.
         draft: false
         prerelease: false
+
+  release-ubuntu:
+    needs: create-release
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+    - name: Download ubuntu artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: spacesloths-${{ github.sha }}-ubuntu
+        path: ./tmp/
+    - name: 
+    - name: Create tar file
+      run: cd tmp && tar -czvf spacesloths.tgz spacesloths
     - name: Upload Release Asset
       id: upload-release-asset 
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        upload_url: ${{ needs.create_release.outputs.upload_url }}
         asset_path: ./tmp/spacesloths.tgz
         asset_name: spacesloths.tgz
         asset_content_type: application/tar+gzip
