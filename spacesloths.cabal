@@ -17,15 +17,25 @@ executable spacesloths
   default-language:    Haskell2010
   default-extensions:  NoImplicitPrelude
                      , OverloadedStrings
+                     , RecordWildCards
+                     , DeriveAnyClass
   build-depends:       base >= 4.7 && < 5
-                     , foundation
+                     , protolude
                      , spacesloths
+                     , array
+                     , threepenny-gui
 
 library
   hs-source-dirs:      src
   default-language:    Haskell2010
   default-extensions:  NoImplicitPrelude
                      , OverloadedStrings
+                     , RecordWildCards
+                     , DeriveAnyClass
   build-depends:       base >= 4.7 && < 5
-                     , foundation
-  exposed-modules:     SpaceSloths.Sloth
+  build-depends:       base >= 4.7 && < 5
+                     , protolude
+                     , array
+  exposed-modules:     SpaceSloths.GameMap
+                     , SpaceSloths.PathFinding
+                     , SpaceSloths.Sloth
