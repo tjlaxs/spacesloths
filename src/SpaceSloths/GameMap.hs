@@ -6,9 +6,9 @@ import Data.Array (Array)
 
 data Cell
   = Vacuum
-  | Air
   | Wall
-  deriving Show
+  | Air
+  deriving (Show, Eq, Ord)
 
 charToCell c =
   case c of
@@ -20,5 +20,5 @@ data GameMap
   = GameMap
   { mapWidth    :: Int
   , mapHeight   :: Int
-  , mapContents :: Array Int Cell
+  , mapContents :: Array (Int, Int) Cell
   } deriving Show
