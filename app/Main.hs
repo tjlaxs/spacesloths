@@ -11,12 +11,12 @@ import Data.Set (Set)
 import qualified Data.Set as Set
 import qualified Graphics.UI.Threepenny as UI
 import Graphics.UI.Threepenny.Core
-import qualified Text.ParserCombinators.ReadP as Parser
 
 import SpaceSloths.Assets (Assets(..), loadAssets)
+import SpaceSloths.Commands (evalCommand, parseCommand)
+import SpaceSloths.Game (GameStatics(..))
 import SpaceSloths.GameMap (GameMap(..), Cell(..), charToCell)
 import SpaceSloths.PathFinding
-import SpaceSloths.Renderer (clearGameView, renderGameView)
 import SpaceSloths.Sloth
 
 treat = Graphics.UI.Threepenny.Core.on
@@ -53,42 +53,6 @@ gameView = do
     # set UI.width canvasSize
     # set style [("border", "solid black 1px"), ("background", "#eee")]
   return canvas
-
-data Command
-  = Render
-  | Clear
-  deriving (Show, Eq)
-
-data GameStatics
-  = GameStatics
-  { _gameView :: Element
-  , _gameAssets :: Assets
-  }
-
-evalCommand (GameStatics v a) m cmd =
-  case cmd of
-    Render -> renderGameView v a m
-    Clear -> clearGameView v
-
-parseCommand input = do
-  case mres of
-    Just res -> Right res
-    Nothing -> Left $ "Failed to parse: " <> input
-  where
-    mres = fst <$> head parse
-    parse =
-      Parser.readP_to_S commands input
-    commands =
-      Parser.choice
-        [ render
-        , clear
-        ]
-    clear = do
-      Parser.string "Clear"
-      return Clear
-    render = do
-      Parser.string "Render"
-      return Render
 
 setup :: Window -> UI ()
 setup rootWin = do
