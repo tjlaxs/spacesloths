@@ -20,6 +20,10 @@ findTile (Assets missing tiles) c = maybe missing id (Map.lookup c tiles)
 renderTile :: UI.Canvas -> Assets -> (Int, Int) -> Cell -> UI ()
 renderTile canvas assets (y,x) cell = UI.drawImage (findTile assets cell) (fromIntegral x * 32, fromIntegral y * 32) canvas
 
+clearGameView :: UI.Canvas -> UI ()
+clearGameView = UI.clearCanvas
+
 renderGameView :: UI.Canvas -> Assets -> GameMap -> UI ()
-renderGameView canvas assets (GameMap w h arr) =
+renderGameView canvas assets (GameMap w h arr) = do
+  canvas # UI.clearCanvas
   mapM_ (uncurry (renderTile canvas assets)) $ assocs arr
