@@ -4,8 +4,8 @@ import Protolude
 
 import Control.Concurrent.STM.TVar (TVar, newTVar, readTVar, writeTVar, modifyTVar)
 import Data.Array (Array, listArray, assocs)
-import Data.Map (Map)
 import Data.Function ((&), id)
+import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Set (Set)
 import qualified Data.Set as Set
@@ -15,6 +15,7 @@ import Graphics.UI.Threepenny.Core
 import SpaceSloths.Assets (loadAssets)
 import SpaceSloths.GameMap (GameMap(..), Cell(..), charToCell)
 import SpaceSloths.PathFinding
+import SpaceSloths.Renderer (renderGameView)
 import SpaceSloths.Sloth
 
 treat = Graphics.UI.Threepenny.Core.on
@@ -35,6 +36,7 @@ gameMap = GameMap 10 10 (listArray ((1,1), (10,10)) lst)
       , "##########"
       ])
 
+missFile = "static/assets/missing_32x32.png"
 assetFiles =
   [ (Vacuum, "static/assets/tiles/spacesloths_0.png")
   , (Wall,   "static/assets/tiles/spacesloths_1.png")
@@ -51,26 +53,13 @@ gameView = do
     & set style [("border", "solid black 1px"), ("background", "#eee")]
   return canvas
 
--- FIXME: pass default tile here so we can return something instead of undefined
-findTile :: Map Cell Element -> Cell -> Element
-findTile assets c = maybe undefined id (Map.lookup c assets)
-
-renderTile :: UI.Canvas -> Map Cell Element -> (Int, Int) -> Cell -> UI ()
-renderTile canvas assets (y,x) cell = UI.drawImage (findTile assets cell) (fromIntegral x * 32, fromIntegral y * 32) canvas
-
-renderGameView :: UI.Canvas -> Map Cell Element -> GameMap -> UI ()
-renderGameView canvas assets (GameMap w h arr) =
-  mapM_ (uncurry (renderTile canvas assets)) $ assocs arr
-
 setup :: Window -> UI ()
 setup rootWin = do
   return rootWin & set UI.title "Space Sloths"
   cp <- commandPrompt
   gv <- gameView
   getBody rootWin & set children [ cp, gv ]
-
-  assets <- loadAssets assetFiles
-
+  assets <- loadAssets missFile assetFiles
   treat UI.sendValue cp $ \input -> do
     case input of
       "render" -> renderGameView gv assets gameMap
@@ -83,5 +72,5 @@ main = do
   where
     settings = defaultConfig
       { jsPort = Just 1983
-      , jsStatic = Just "./wwwroot"
+      , jsStatic = Just "./static"
       }

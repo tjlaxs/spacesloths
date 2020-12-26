@@ -44,4 +44,5 @@ library
   exposed-modules:     SpaceSloths.Assets
                      , SpaceSloths.GameMap
                      , SpaceSloths.PathFinding
+                     , SpaceSloths.Renderer
                      , SpaceSloths.Sloth
