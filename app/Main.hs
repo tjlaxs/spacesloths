@@ -16,7 +16,7 @@ import qualified Text.ParserCombinators.ReadP as Parser
 import SpaceSloths.Assets (Assets(..), loadAssets)
 import SpaceSloths.GameMap (GameMap(..), Cell(..), charToCell)
 import SpaceSloths.PathFinding
-import SpaceSloths.Renderer (renderGameView)
+import SpaceSloths.Renderer (clearGameView, renderGameView)
 import SpaceSloths.Sloth
 
 treat = Graphics.UI.Threepenny.Core.on
@@ -54,7 +54,10 @@ gameView = do
     # set style [("border", "solid black 1px"), ("background", "#eee")]
   return canvas
 
-data Command = Render deriving (Show, Eq)
+data Command
+  = Render
+  | Clear
+  deriving (Show, Eq)
 
 data GameStatics
   = GameStatics
@@ -65,6 +68,7 @@ data GameStatics
 evalCommand (GameStatics v a) m cmd =
   case cmd of
     Render -> renderGameView v a m
+    Clear -> clearGameView v
 
 parseCommand input = do
   case mres of
@@ -77,9 +81,13 @@ parseCommand input = do
     commands =
       Parser.choice
         [ render
+        , clear
         ]
+    clear = do
+      Parser.string "Clear"
+      return Clear
     render = do
-      _ <- Parser.string "Render"
+      Parser.string "Render"
       return Render
 
 setup :: Window -> UI ()
