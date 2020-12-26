@@ -42,6 +42,8 @@ library
                      , stm
                      , threepenny-gui
   exposed-modules:     SpaceSloths.Assets
+                     , SpaceSloths.Commands
+                     , SpaceSloths.Game
                      , SpaceSloths.GameMap
                      , SpaceSloths.PathFinding
                      , SpaceSloths.Renderer
